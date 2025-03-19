@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<workflow xmlns:comm="http://www.ataccama.com/purity/comment" xmlns:vis="http://www.ataccama.com/purity/visual" version="15.4.0.241029-8737-771ee447">
+	<continueOnFailure>false</continueOnFailure>
+	<description>Simple Hello World</description>
+	<groups/>
+	<multiplicity>0</multiplicity>
+	<name>WF Tutorial</name>
+	<variables>
+		<derived/>
+		<input>
+			<ewfInputVariable name="SALUTATION">
+				<comm:comment>Input parameter</comm:comment>
+			</ewfInputVariable>
+		</input>
+	</variables>
+	<tasks>
+		<task mode="NORMAL" acceptMode="ALL_VALID" disabled="false" id="Run DQC" priority="0">
+			<executable parallelismLevel="1" class="com.ataccama.adt.task.exec.EwfDqcTask" planFile="../plans/08.02 Card.plan"/>
+			<vis:visualConstraints bounds="213,170,54,54"/>
+		</task>
+	</tasks>
+	<vis:modelComments>
+		<vis:modelComment backgroundColor="128,255,128" borderColor="183,183,0" bounds="24,24,400,90" foregroundColor="51,51,51">Welcome to the Technical Workflow Tutorials
+===========================
+These tutorials will help you learn how to use various Workflow Tasks.
+Each tutorial is thoroughly described and documented.
+For deeper understanding please read the Workflow Reference documentation.</vis:modelComment>
+		<vis:modelComment backgroundColor="218,218,218" borderColor="183,183,0" bounds="24,300,400,105" foregroundColor="51,51,51">&quot;Hello World&quot; example demonstrates:
+    1. The task&#39;s endpoints - one input and two outputs:
+	normal	- used when task has successfully finished
+	error	- used when task execution has failed
+    2. How to define workflow variables (double-click on the canvas
+	or use right-click &gt; Edit Properties)
+    3. How to read and use input parameter passed to the workflow.</vis:modelComment>
+		<vis:modelComment backgroundColor="219,219,219" borderColor="183,183,0" bounds="25,429,400,50" foregroundColor="0,0,0">The task &quot;Run Windows Command&quot; is used to execute scripts on OS Windows
+environments.</vis:modelComment>
+		<vis:modelComment backgroundColor="255,255,180" borderColor="183,183,0" bounds="475,24,399,399" foregroundColor="51,51,51">     How to run the Tutorials
+==================
+To run the tutorial examples there are two
+options:
+
+- execute the workflow directly from your IDE
+- execute the workflow using Ataccama Server
+
+ !! Important Notice !!
+-----------------------------
+ Some Tutorials require Ataccama Server environment  for Database engine 
+ emulation (Apache Derby is used). Please make sure the Ataccama Server is
+ running for those examples to work properly. In order to check the results in
+ the database, it is recommended to register the database in your IDE by
+ creating a new database connection in &quot;Databases&quot; node. The paramaters
+ of the connection must be the same as specified in the &quot;wfl.runtimeConfig&quot;
+ of this example.
+ 
+ To start the server instance open the bin  folder in the Workflow Tutorials and
+ execute the start-server.bat batch file. When the server is ready, open the
+ Web Console located at:
+
+ http://localhost:8889
+
+ and run the Workflows from
+ the Workflow Configurations menu
+
+ When launching the Workflow from IDE look for Run Workflow button or
+ refer to the Getting started Guide.</vis:modelComment>
+		<vis:modelComment backgroundColor="255,255,180" borderColor="183,183,0" bounds="474,435,400,140" foregroundColor="51,51,51">     How to run this Tutorial
+==================
+ - Using Ataccama Server:
+ go to server Web Console, open Workflow Configurations
+ and run this Workflow either with or without providing
+ the SALUTATION parameter to see the difference.
+
+ When the WF has finished open the Instance ID and
+ expand the Details - search for &quot;stdout.log&quot;</vis:modelComment>
+	</vis:modelComments>
+</workflow>
