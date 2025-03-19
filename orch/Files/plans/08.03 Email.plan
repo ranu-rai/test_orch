@@ -1,0 +1,95 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<purity-config version="15.4.0.241010-368-484083b9">
+	<references/>
+	<component-mappings>
+		<propertyMappings/>
+	</component-mappings>
+
+<!-- (Email) --><step id="Email" className="com.ataccama.dqc.tasks.clean.ValidateEmailAlgorithm" disabled="false" mode="NORMAL">
+		<properties outEmail="std_email" tldLookupFileName="../data/ext/lkp/email_tld.lkp" in="src_email">
+			<scorer explanationColumn="exp_email" scoreColumn="sco_email">
+				<scoringEntries>
+					<scoringEntry score="10000" explainAs="EML_NULL" explain="true" key="EML_NULL"/>
+					<scoringEntry score="10000" explainAs="EML_ADDRESS" explain="true" key="EML_ADDRESS"/>
+					<scoringEntry score="10000" explainAs="EML_TLD" explain="true" key="EML_TLD"/>
+					<scoringEntry score="10000" explainAs="EML_AMBIGUOUS_DOMAIN" explain="true" key="EML_AMBIGUOUS_DOMAIN"/>
+				</scoringEntries>
+			</scorer>
+		</properties>
+		<visual-constraints bounds="48,168,-1,-1" layout="vertical"/>
+	</step>
+	<connection className="com.ataccama.dqc.model.elements.connections.StandardFlowConnection" disabled="false">
+		<source step="Email" endpoint="out"/>
+		<target step="Validated email" endpoint="in"/>
+		<visual-constraints>
+			<bendpoints/>
+		</visual-constraints>
+	</connection>
+
+
+
+<!-- (Validated email) --><step id="Validated email" className="com.ataccama.dqc.tasks.io.text.write.TextFileWriter" disabled="false" mode="NORMAL">
+		<properties useStringQualifierOnAllColumns="false" stringQualifier="&quot;" lineSeparator="\r\n" fieldSeparator=";" generateMetadata="true" fileName="../data/out/08.03 Email_validated.csv" encoding="UTF-8" writeHeader="true" writeAllColumns="false" compression="NONE" stringQualifierEscape="&quot;">
+			<columns>
+				<textWriterColumn name="src_email"/>
+				<textWriterColumn name="std_email"/>
+				<textWriterColumn name="sco_email"/>
+				<textWriterColumn name="exp_email"/>
+			</columns>
+			<dataFormatParameters trueValue="true" falseValue="false" thousandsSeparator="" dateFormatLocale="en_US" dateTimeFormat="yyyy-MM-dd HH:mm:ss" decimalSeparator="." dayFormat="yyyy-MM-dd"/>
+		</properties>
+		<visual-constraints bounds="48,240,-1,-1" layout="vertical"/>
+	</step>
+
+
+
+<!-- (party) --><step id="party" className="com.ataccama.dqc.tasks.io.text.read.TextFileReader" disabled="false" mode="NORMAL">
+		<properties stringQualifier="&quot;" lineSeparator="\r\n" fieldSeparator=";" lineMaxReadLength="65536" numberOfLinesInHeader="1" fileName="../data/in/party.csv" encoding="UTF-8" numberOfLinesInFooter="0" compression="NONE" stringQualifierEscape="&quot;">
+			<columns>
+				<textReaderColumn name="src_name" type="STRING" ignore="true"/>
+				<textReaderColumn name="src_gender" type="STRING" ignore="true"/>
+				<textReaderColumn name="src_birth_date" type="STRING" ignore="true"/>
+				<textReaderColumn name="src_sin" type="STRING" ignore="true"/>
+				<textReaderColumn name="src_card" type="STRING" ignore="true"/>
+				<textReaderColumn name="src_address" type="STRING" ignore="true"/>
+				<textReaderColumn name="src_email" type="STRING" ignore="false"/>
+				<textReaderColumn name="src_primary_key" type="STRING" ignore="true"/>
+				<textReaderColumn name="meta_last_update" type="STRING" ignore="true"/>
+			</columns>
+			<dataFormatParameters trueValue="true" falseValue="false" thousandsSeparator="" dateFormatLocale="en_US" dateTimeFormat="yy-MM-dd HH:mm:ss" decimalSeparator="." dayFormat="yy-MM-dd"/>
+			<errorHandlingStrategy rejectFileName="rejected.txt">
+				<errorInstructions>
+					<errorInstruction putToLog="true" errorType="EXTRA_DATA" dataStrategy="READ_POSSIBLE" putToReject="false"/>
+					<errorInstruction putToLog="true" errorType="LONG_LINE" dataStrategy="STOP" putToReject="true"/>
+					<errorInstruction putToLog="true" errorType="PROCESSING_ERROR" dataStrategy="STOP" putToReject="false"/>
+					<errorInstruction putToLog="true" errorType="INVALID_DATE" dataStrategy="READ_POSSIBLE" putToReject="false"/>
+					<errorInstruction putToLog="true" errorType="SHORT_LINE" dataStrategy="READ_POSSIBLE" putToReject="true"/>
+					<errorInstruction putToLog="true" errorType="UNPARSABLE_FIELD" dataStrategy="NULL_VALUE" putToReject="false"/>
+				</errorInstructions>
+			</errorHandlingStrategy>
+			<shadowColumns>
+				<shadowColumnDef name="std_email" type="STRING"/>
+				<shadowColumnDef name="sco_email" type="INTEGER"/>
+				<shadowColumnDef name="exp_email" type="STRING"/>
+			</shadowColumns>
+		</properties>
+		<visual-constraints bounds="48,96,-1,-1" layout="vertical"/>
+	</step>
+	<connection className="com.ataccama.dqc.model.elements.connections.StandardFlowConnection" disabled="false">
+		<source step="party" endpoint="out"/>
+		<target step="Email" endpoint="in"/>
+		<visual-constraints>
+			<bendpoints/>
+		</visual-constraints>
+	</connection>
+
+
+
+<modelComment bounds="24,24,433,54" borderColor="255,255,255" backgroundColor="128,255,128" foregroundColor="40,0,0">Plan Goals
+The goal of this plan is to perform quick cleansing of emails using the Validate Email step.</modelComment>
+
+
+
+<modelComment bounds="192,168,409,38" borderColor="255,255,255" backgroundColor="219,219,219" foregroundColor="64,0,64">Validate Email uses an LKP file containing valid top-level domains.</modelComment>
+
+</purity-config>

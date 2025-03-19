@@ -1,0 +1,156 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<purity-config xmlns:comm="http://www.ataccama.com/purity/comment" version="15.4.0.241010-368-484083b9">
+	<references/>
+	<component-mappings>
+		<propertyMappings/>
+	</component-mappings>
+
+<!-- (Cleansed SIN) --><step id="Cleansed SIN" className="com.ataccama.dqc.tasks.io.text.write.TextFileWriter" disabled="false" mode="NORMAL">
+		<properties useStringQualifierOnAllColumns="false" stringQualifier="&quot;" lineSeparator="\r\n" fieldSeparator=";" generateMetadata="true" fileName="../../data/out/08.01 SIN_cleansed.csv" encoding="UTF-8" writeHeader="true" writeAllColumns="false" compression="NONE" stringQualifierEscape="&quot;">
+			<columns>
+				<textWriterColumn name="src_sin"/>
+				<textWriterColumn name="std_sin"/>
+				<textWriterColumn name="exp_sin"/>
+				<textWriterColumn name="sco_sin"/>
+			</columns>
+			<dataFormatParameters trueValue="true" falseValue="false" thousandsSeparator="" dateFormatLocale="en_US" dateTimeFormat="yyyy-MM-dd HH:mm:ss" decimalSeparator="." dayFormat="yyyy-MM-dd"/>
+		</properties>
+		<visual-constraints bounds="48,312,-1,-1" layout="vertical"/>
+	</step>
+
+
+
+<!-- (Create pur values) --><step id="Create pur values" className="com.ataccama.dqc.tasks.expressions.ColumnAssigner" disabled="false" mode="NORMAL">
+		<properties>
+			<assignments>
+				<assignment column="pur_sin">
+					<expression>src_sin
+</expression>
+					<scorer>
+						<scoringEntries>
+							<scoringEntry score="0" explainAs="CA_CHANGED" explain="false" key="CA_CHANGED"/>
+						</scoringEntries>
+					</scorer>
+					<comm:comment>Initial assigment. We do not use scoring here.
+Scoring is used only if the column was changed from its original value. In this case, as the pur_sin was empty, the score would be present in all cases except empty src_sin.</comm:comment>
+				</assignment>
+				<assignment column="pur_sin">
+					<expression>trashNonDigits(pur_sin)
+</expression>
+					<scorer explanationColumn="exp_sin" scoreColumn="sco_sin">
+						<scoringEntries>
+							<scoringEntry score="10" explainAs="SIN_EXTRACHAR" explain="true" key="CA_CHANGED"/>
+						</scoringEntries>
+					</scorer>
+					<comm:comment>Removing all non digit characters. 
+As we assign from pur_sin to pur_sin, the scoring will be used only if some non digit characters were removed. Look at scoring node - we use &quot;SIN_EXTRACHAR&quot;.</comm:comment>
+				</assignment>
+				<assignment column="pur_sin">
+					<expression>iif( 
+	length(trashNonDigits(pur_sin)) &gt; 0
+	AND	
+	length(trashNonDigits(pur_sin) ) &lt; 9
+	AND 
+	not matches(@&quot;[0]\{1,}&quot;, trashNonDigits(pur_sin))
+	,
+		substr(&#39;00000000&#39; + pur_sin, -9),
+		pur_sin
+	)</expression>
+					<scorer explanationColumn="exp_sin" scoreColumn="sco_sin">
+						<scoringEntries>
+							<scoringEntry score="10" explainAs="SIN_EXTENDED_BY_ZEROS" explain="true" key="CA_CHANGED"/>
+						</scoringEntries>
+					</scorer>
+					<comm:comment>If the source sin number is shorter than 9 digits but contains at least 1 digit, it is extended by zero characters from the left. 
+The reason is that missing leading zero character might be removed in the source system or transformation. This example does not repair any kind of dummy or null values.</comm:comment>
+				</assignment>
+			</assignments>
+		</properties>
+		<visual-constraints bounds="48,168,-1,-1" layout="vertical"/>
+	</step>
+	<connection className="com.ataccama.dqc.model.elements.connections.StandardFlowConnection" disabled="false">
+		<source step="Create pur values" endpoint="out"/>
+		<target step="Social Insurance Number" endpoint="in"/>
+		<visual-constraints>
+			<bendpoints/>
+		</visual-constraints>
+	</connection>
+
+
+
+<!-- (Social Insurance Number) --><step id="Social Insurance Number" className="com.ataccama.dqc.tasks.clean.ca.SINValidatorAlgorithm" disabled="false" mode="NORMAL">
+		<properties preserveInputValue="false" sin="pur_sin" omitInvalidSIN="true" sinOut="std_sin">
+			<scorer explanationColumn="exp_sin" scoreColumn="sco_sin">
+				<scoringEntries>
+					<scoringEntry score="10000" explainAs="SIN_MISSING" explain="true" key="SV_SIN_MISSING"/>
+					<scoringEntry score="10000" explainAs="SIN_INVALID_LENGTH" explain="true" key="SV_INVALID_LENGTH"/>
+					<scoringEntry score="10000" explainAs="SIN_INVALID_CHECK" explain="true" key="SV_INVALID_CHECK"/>
+				</scoringEntries>
+			</scorer>
+			<comm:comment>Canadian Social Insurance Number is validated by using the Luhn Algorithm. For more details see documentation of this step.</comm:comment>
+		</properties>
+		<visual-constraints bounds="48,240,-1,-1" layout="vertical"/>
+	</step>
+	<connection className="com.ataccama.dqc.model.elements.connections.StandardFlowConnection" disabled="false">
+		<source step="Social Insurance Number" endpoint="out"/>
+		<target step="Cleansed SIN" endpoint="in"/>
+		<visual-constraints>
+			<bendpoints/>
+		</visual-constraints>
+	</connection>
+
+
+
+<!-- (party) --><step id="party" className="com.ataccama.dqc.tasks.io.text.read.TextFileReader" disabled="false" mode="NORMAL">
+		<properties stringQualifier="&quot;" lineSeparator="\r\n" fieldSeparator=";" lineMaxReadLength="65536" numberOfLinesInHeader="1" fileName="../../data/in/party_full.csv" encoding="UTF-8" numberOfLinesInFooter="0" compression="NONE" stringQualifierEscape="&quot;">
+			<columns>
+				<textReaderColumn name="src_name" type="STRING" ignore="true"/>
+				<textReaderColumn name="src_gender" type="STRING" ignore="true"/>
+				<textReaderColumn name="src_birth_date" type="STRING" ignore="true"/>
+				<textReaderColumn name="src_sin" type="STRING" ignore="false"/>
+				<textReaderColumn name="src_card" type="STRING" ignore="true"/>
+				<textReaderColumn name="src_address" type="STRING" ignore="true"/>
+				<textReaderColumn name="src_email" type="STRING" ignore="true"/>
+				<textReaderColumn name="src_primary_key" type="STRING" ignore="true"/>
+				<textReaderColumn name="meta_last_update" type="STRING" ignore="true"/>
+			</columns>
+			<dataFormatParameters trueValue="true" falseValue="false" thousandsSeparator="" dateFormatLocale="en_US" dateTimeFormat="yy-MM-dd HH:mm:ss" decimalSeparator="." dayFormat="yy-MM-dd"/>
+			<errorHandlingStrategy rejectFileName="rejected.txt">
+				<errorInstructions>
+					<errorInstruction putToLog="true" errorType="EXTRA_DATA" dataStrategy="READ_POSSIBLE" putToReject="false"/>
+					<errorInstruction putToLog="true" errorType="LONG_LINE" dataStrategy="STOP" putToReject="true"/>
+					<errorInstruction putToLog="true" errorType="PROCESSING_ERROR" dataStrategy="STOP" putToReject="false"/>
+					<errorInstruction putToLog="true" errorType="INVALID_DATE" dataStrategy="READ_POSSIBLE" putToReject="false"/>
+					<errorInstruction putToLog="true" errorType="SHORT_LINE" dataStrategy="READ_POSSIBLE" putToReject="true"/>
+					<errorInstruction putToLog="true" errorType="UNPARSABLE_FIELD" dataStrategy="NULL_VALUE" putToReject="false"/>
+				</errorInstructions>
+			</errorHandlingStrategy>
+			<shadowColumns>
+				<shadowColumnDef name="pur_sin" type="STRING"/>
+				<shadowColumnDef name="std_sin" type="STRING"/>
+				<shadowColumnDef name="exp_sin" type="STRING"/>
+				<shadowColumnDef name="sco_sin" type="INTEGER"/>
+			</shadowColumns>
+		</properties>
+		<visual-constraints bounds="48,96,-1,-1" layout="vertical"/>
+	</step>
+	<connection className="com.ataccama.dqc.model.elements.connections.StandardFlowConnection" disabled="false">
+		<source step="party" endpoint="out"/>
+		<target step="Create pur values" endpoint="in"/>
+		<visual-constraints>
+			<bendpoints/>
+		</visual-constraints>
+	</connection>
+
+
+
+<modelComment bounds="24,24,217,70" borderColor="255,255,255" backgroundColor="128,255,128" foregroundColor="40,0,0">Plan Goals
+The goal of this plan is to perform quick cleansing of 
+personal identifiers using the SIN Validator step.</modelComment>
+
+
+
+<modelComment bounds="264,240,236,54" borderColor="255,255,255" backgroundColor="219,219,219" foregroundColor="64,0,64">This example shows cleansing of 
+Canadian Social Insurance Numbers.</modelComment>
+
+</purity-config>

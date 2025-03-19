@@ -1,0 +1,181 @@
+<?xml version='1.0' encoding='utf-8'?>
+<purity-config version="15.4.0.241010-368-484083b9">
+	<references/>
+	<component-mappings>
+		<propertyMappings/>
+	</component-mappings>
+
+<!-- (Add columns) --><step mode="NORMAL" className="com.ataccama.dqc.tasks.flow.AlterFormat" disabled="false" id="Add columns">
+		<properties>
+			<addedColumns>
+				<addedColumn name="pur_first_name_orig" type="STRING"/>
+				<addedColumn name="pur_last_name_orig" type="STRING"/>
+				<addedColumn name="std_first_name" type="STRING"/>
+				<addedColumn name="std_last_name" type="STRING"/>
+				<addedColumn name="pat_full_name" type="STRING"/>
+				<addedColumn name="exp" type="STRING"/>
+				<addedColumn name="pur_full_name" type="STRING"/>
+				<addedColumn name="std_titles" type="STRING"/>
+			</addedColumns>
+			<removedColumns/>
+		</properties>
+		<visual-constraints layout="vertical" bounds="48,168,-1,-1"/>
+	</step>
+	<connection className="com.ataccama.dqc.model.elements.connections.StandardFlowConnection" disabled="false">
+		<source endpoint="out" step="Add columns"/>
+		<target endpoint="in" step="Remove titles"/>
+		<visual-constraints>
+			<bendpoints/>
+		</visual-constraints>
+	</connection>
+
+
+
+<!-- (Parse names) --><step mode="NORMAL" className="com.ataccama.dqc.tasks.clean.GuessNameSurnameAlgorithm" disabled="false" id="Parse names">
+		<properties lastName="std_last_name" multiWordDefinition="{MULTIWORD:wordSeparators=&quot;-&#39;`&quot;&quot;~&quot;}" interlacedWordDefinition="{INTERLACED_WORD}" lastNameOrig="pur_last_name_orig" proposalSelectionStrategy="DISTANCE_BASED" in="pur_full_name" patternName="pat_full_name" lastNameLookupFileName="../data/ext/lkp/last_names.lkp" wordDefinition="{WORD}" firstNameOrig="pur_first_name_orig" multiWordSeparators=" " firstName="std_first_name" firstNameLookupFileName="../data/ext/lkp/first_names.lkp" fullTrashScope="false" preserveIfDiffers="PRESERVE_NONE">
+			<components>
+				<component name="INITIAL" definition="{LETTER}">
+					<scorer explanationColumn="exp">
+						<scoringEntries>
+							<scoringEntry explain="false" score="0" explainAs="GPV_MISMATCH" key="PPV_MISMATCH"/>
+						</scoringEntries>
+					</scorer>
+				</component>
+			</components>
+			<hints/>
+			<patternGroups>
+				<patternGroup>
+					<patterns>
+						<pattern name="F! L!" definition="{FIRST_NAME!}{LAST_NAME!}" priority="0"/>
+						<pattern name="F! I  L!" definition="{FIRST_NAME!}{INITIAL}{LAST_NAME!}" priority="0"/>
+						<pattern name="F! F! L!" definition="{FIRST_NAME!}{FIRST_NAME!}{LAST_NAME}" priority="0"/>
+					</patterns>
+				</patternGroup>
+				<patternGroup>
+					<patterns>
+						<pattern name="F L" definition="{FIRST_NAME}{LAST_NAME}" priority="0"/>
+						<pattern name="F I  L" definition="{FIRST_NAME}{INITIAL}{LAST_NAME}" priority="0"/>
+						<pattern name="F F L" definition="{FIRST_NAME}{FIRST_NAME}{LAST_NAME}" priority="0"/>
+					</patterns>
+				</patternGroup>
+			</patternGroups>
+			<scorer explanationColumn="exp">
+				<scoringEntries>
+					<scoringEntry explain="true" score="0" explainAs="NM_NULL" key="NM_NULL"/>
+					<scoringEntry explain="true" score="0" explainAs="NM_NO_PATTERN" key="NM_NO_PATTERN"/>
+					<scoringEntry explain="true" score="0" explainAs="NM_PART_PATTERN" key="NM_PART_PATTERN"/>
+					<scoringEntry explain="true" score="0" explainAs="NM_MORE_PATTERNS" key="NM_MORE_PATTERNS"/>
+					<scoringEntry explain="true" score="0" explainAs="NM_DIFFERENT" key="NM_DIFFERENT"/>
+					<scoringEntry explain="true" score="0" explainAs="NM_HINT" key="NM_HINT"/>
+					<scoringEntry explain="true" score="0" explainAs="NM_TRASH" key="NM_TRASH"/>
+				</scoringEntries>
+			</scorer>
+			<tokenizerConfig whiteSpaceDefinition="[:white:]">
+				<types>
+					<tokenType tokenStartCharacters="[:letter:]" tokenCharacters="[:letter:]"/>
+					<tokenType tokenStartCharacters="[:digit:]" tokenCharacters="[:digit:]"/>
+				</types>
+			</tokenizerConfig>
+		</properties>
+		<visual-constraints layout="vertical" bounds="48,312,-1,-1"/>
+	</step>
+	<connection className="com.ataccama.dqc.model.elements.connections.StandardFlowConnection" disabled="false">
+		<source endpoint="out" step="Parse names"/>
+		<target endpoint="in" step="Results"/>
+		<visual-constraints>
+			<bendpoints/>
+		</visual-constraints>
+	</connection>
+
+
+
+<!-- (Remove titles) --><step mode="NORMAL" className="com.ataccama.dqc.tasks.clean.StripTitlesAlgorithm" disabled="false" id="Remove titles">
+		<properties minWordCount="0" titlesOut="std_titles" in="src_full_name" preserveUnsupportedChars="true" titleLookupFileName="../data/ext/lkp/titles.lkp" separator="" out="pur_full_name">
+			<scorer explanationColumn="exp">
+				<scoringEntries>
+					<scoringEntry explain="true" score="0" explainAs="TITLE_FOUND" key="ST_CHANGED"/>
+				</scoringEntries>
+			</scorer>
+			<tokenizer whiteSpaceDefinition="[:white:]">
+				<types>
+					<tokenType tokenStartCharacters="[:letter:]" tokenCharacters="[:letter:]"/>
+					<tokenType tokenStartCharacters="[:digit:]" tokenCharacters="[:digit:]"/>
+				</types>
+			</tokenizer>
+		</properties>
+		<visual-constraints layout="vertical" bounds="48,240,-1,-1"/>
+	</step>
+	<connection className="com.ataccama.dqc.model.elements.connections.StandardFlowConnection" disabled="false">
+		<source endpoint="out" step="Remove titles"/>
+		<target endpoint="in" step="Parse names"/>
+		<visual-constraints>
+			<bendpoints/>
+		</visual-constraints>
+	</connection>
+
+
+
+<!-- (Results) --><step mode="NORMAL" className="com.ataccama.dqc.tasks.io.text.write.TextFileWriter" disabled="false" id="Results">
+		<properties writeHeader="true" fileName="../data/out/08.04 Parsed_names.csv" fieldSeparator=";" generateMetadata="true" stringQualifierEscape="&quot;" writeAllColumns="false" compression="NONE" encoding="UTF-8" lineSeparator="\r\n" stringQualifier="&quot;" useStringQualifierOnAllColumns="false">
+			<columns>
+				<textWriterColumn name="src_full_name"/>
+				<textWriterColumn name="pur_first_name_orig"/>
+				<textWriterColumn name="pur_last_name_orig"/>
+				<textWriterColumn name="std_titles"/>
+				<textWriterColumn name="std_first_name"/>
+				<textWriterColumn name="std_last_name"/>
+				<textWriterColumn name="pat_full_name"/>
+				<textWriterColumn name="exp"/>
+			</columns>
+			<dataFormatParameters falseValue="false" dateTimeFormat="yyyy-MM-dd HH:mm:ss" decimalSeparator="." dayFormat="yyyy-MM-dd" trueValue="true" dateFormatLocale="en_US" thousandsSeparator=""/>
+		</properties>
+		<visual-constraints layout="vertical" bounds="48,384,-1,-1"/>
+	</step>
+
+
+
+<!-- (names) --><step mode="NORMAL" className="com.ataccama.dqc.tasks.io.text.read.TextFileReader" disabled="false" id="names">
+		<properties lineMaxReadLength="65536" fileName="../data/in/names.csv" fieldSeparator=";" stringQualifierEscape="&quot;" numberOfLinesInFooter="0" compression="NONE" encoding="UTF-8" lineSeparator="\r\n" stringQualifier="&quot;" numberOfLinesInHeader="1">
+			<columns>
+				<textReaderColumn name="src_full_name" ignore="false" type="STRING"/>
+			</columns>
+			<dataFormatParameters falseValue="false" dateTimeFormat="yy-MM-dd HH:mm:ss" decimalSeparator="." dayFormat="yy-MM-dd" trueValue="true" dateFormatLocale="en_US" thousandsSeparator=""/>
+			<errorHandlingStrategy rejectFileName="rejected.txt">
+				<errorInstructions>
+					<errorInstruction dataStrategy="READ_POSSIBLE" errorType="EXTRA_DATA" putToLog="true" putToReject="false"/>
+					<errorInstruction dataStrategy="STOP" errorType="LONG_LINE" putToLog="true" putToReject="true"/>
+					<errorInstruction dataStrategy="STOP" errorType="PROCESSING_ERROR" putToLog="true" putToReject="false"/>
+					<errorInstruction dataStrategy="READ_POSSIBLE" errorType="INVALID_DATE" putToLog="true" putToReject="false"/>
+					<errorInstruction dataStrategy="READ_POSSIBLE" errorType="SHORT_LINE" putToLog="true" putToReject="true"/>
+					<errorInstruction dataStrategy="NULL_VALUE" errorType="UNPARSABLE_FIELD" putToLog="true" putToReject="false"/>
+				</errorInstructions>
+			</errorHandlingStrategy>
+			<shadowColumns/>
+		</properties>
+		<visual-constraints layout="vertical" bounds="48,96,-1,-1"/>
+	</step>
+	<connection className="com.ataccama.dqc.model.elements.connections.StandardFlowConnection" disabled="false">
+		<source endpoint="out" step="names"/>
+		<target endpoint="in" step="Add columns"/>
+		<visual-constraints>
+			<bendpoints/>
+		</visual-constraints>
+	</connection>
+
+
+
+<modelComment backgroundColor="128,255,128" borderColor="255,255,255" bounds="48,24,333,54" foregroundColor="40,0,0">Plan Goals
+The goal of this plan is to demonstrate name parsing. </modelComment>
+
+
+
+<modelComment backgroundColor="219,219,219" borderColor="255,255,255" bounds="240,240,349,150" foregroundColor="64,0,64">Titles (both academic and social) are stripped
+from the names and placed in a new column. 
+
+First and last names are separated 
+based on patterns specified in the Guess Name
+Surname step.
+
+Both steps use LKP files to perform their transformations.</modelComment>
+
+</purity-config>

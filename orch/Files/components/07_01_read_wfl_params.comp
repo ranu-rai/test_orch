@@ -1,0 +1,162 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<purity-config xmlns:def="http://www.ataccama.com/purity/defaults" version="15.4.0.241010-368-484083b9">
+	<references/>
+	<component-mappings>
+		<propertyMappings>
+			<property name="fullOutputFileName" insert="false" mappedTo="outFullData/fileName">
+				<def:default-value/>
+			</property>
+			<property name="fullOutputFileWriteHeader" insert="false" mappedTo="outFullData/writeHeader">
+				<def:default-value>
+					<writeHeader>false</writeHeader>
+				</def:default-value>
+			</property>
+			<property name="filterCondition" insert="false" mappedTo="Extract Filter/condition">
+				<def:default-value>
+					<condition>//if the passed parameter is null, an expression defined here is used by default
+TYPE &lt;&gt; &#39;DOW&#39;</condition>
+				</def:default-value>
+			</property>
+			<property name="filteredOutputFileName" insert="false" mappedTo="outFilteredData/fileName">
+				<def:default-value>
+					<fileName>pathvar://DATA_TEMP/test.txt</fileName>
+				</def:default-value>
+			</property>
+			<property name="fileNameExpression" insert="false" mappedTo="Column Assigner/assignments[0]/expression">
+				<def:default-value/>
+			</property>
+		</propertyMappings>
+	</component-mappings>
+
+<!-- (Column Assigner) --><step mode="NORMAL" className="com.ataccama.dqc.tasks.expressions.ColumnAssigner" disabled="false" id="Column Assigner">
+		<properties>
+			<assignments>
+				<assignment column="file_name_expression">
+					<scorer>
+						<scoringEntries>
+							<scoringEntry explain="false" score="0" explainAs="CA_CHANGED" key="CA_CHANGED"/>
+						</scoringEntries>
+					</scorer>
+				</assignment>
+			</assignments>
+		</properties>
+		<visual-constraints layout="vertical" bounds="288,120,-1,-1"/>
+	</step>
+	<connection className="com.ataccama.dqc.model.elements.connections.StandardFlowConnection" disabled="false">
+		<source endpoint="out" step="Column Assigner"/>
+		<target endpoint="in" step="Extract Filter"/>
+		<visual-constraints>
+			<bendpoints/>
+		</visual-constraints>
+	</connection>
+
+
+
+<!-- (Extract Filter) --><step mode="NORMAL" className="com.ataccama.dqc.tasks.conditions.ExtractFilter" disabled="false" id="Extract Filter">
+		<properties>
+			<condition>//if the passed parameter is null, an expression defined here is used by default
+TYPE &lt;&gt; &#39;DOW&#39;</condition>
+		</properties>
+		<visual-constraints layout="vertical" bounds="288,192,-1,-1"/>
+	</step>
+	<connection className="com.ataccama.dqc.model.elements.connections.StandardFlowConnection" disabled="false">
+		<source endpoint="out" step="Extract Filter"/>
+		<target endpoint="in" step="Multiplicator"/>
+		<visual-constraints>
+			<bendpoints/>
+		</visual-constraints>
+	</connection>
+	<connection className="com.ataccama.dqc.model.elements.connections.StandardFlowConnection" disabled="false">
+		<source endpoint="out_extract" step="Extract Filter"/>
+		<target endpoint="in" step="outFilteredData"/>
+		<visual-constraints>
+			<bendpoints/>
+		</visual-constraints>
+	</connection>
+
+
+
+<!-- (Jdbc Reader) --><step mode="NORMAL" className="com.ataccama.dqc.tasks.io.jdbc.read.JdbcReader" disabled="false" id="Jdbc Reader">
+		<properties queryString="SELECT ID, PARAM_VALUE, TYPE, STATUS, PLAN_DT, FINISH_DT FROM WFL_PARAM " dataSourceName="wfl">
+			<columns>
+				<jdbcReaderColumn src="ID" name="ID" type="INTEGER"/>
+				<jdbcReaderColumn src="PARAM_VALUE" name="PARAM_VALUE" type="STRING"/>
+				<jdbcReaderColumn src="TYPE" name="TYPE" type="STRING"/>
+				<jdbcReaderColumn src="STATUS" name="STATUS" type="STRING"/>
+				<jdbcReaderColumn src="PLAN_DT" name="PLAN_DT" type="DATETIME"/>
+				<jdbcReaderColumn src="FINISH_DT" name="FINISH_DT" type="DATETIME"/>
+			</columns>
+			<shadowColumns>
+				<shadowColumnDef name="file_name_expression" type="STRING"/>
+			</shadowColumns>
+		</properties>
+		<visual-constraints layout="vertical" bounds="288,48,-1,-1"/>
+	</step>
+	<connection className="com.ataccama.dqc.model.elements.connections.StandardFlowConnection" disabled="false">
+		<source endpoint="out" step="Jdbc Reader"/>
+		<target endpoint="in" step="Column Assigner"/>
+		<visual-constraints>
+			<bendpoints/>
+		</visual-constraints>
+	</connection>
+
+
+
+<!-- (Multiplicator) --><step mode="NORMAL" className="com.ataccama.dqc.tasks.flow.Multiplicator" disabled="false" id="Multiplicator">
+		<properties/>
+		<visual-constraints layout="vertical" bounds="264,264,48,48"/>
+	</step>
+	<connection className="com.ataccama.dqc.model.elements.connections.StandardFlowConnection" disabled="false">
+		<source endpoint="out" step="Multiplicator"/>
+		<target endpoint="in" step="outFullData"/>
+		<visual-constraints>
+			<bendpoints/>
+		</visual-constraints>
+	</connection>
+	<connection className="com.ataccama.dqc.model.elements.connections.StandardFlowConnection" disabled="false">
+		<source endpoint="out" step="Multiplicator"/>
+		<target endpoint="in" step="outTempData"/>
+		<visual-constraints>
+			<bendpoints/>
+		</visual-constraints>
+	</connection>
+
+
+
+<!-- (outFilteredData) --><step mode="NORMAL" className="com.ataccama.dqc.tasks.io.text.write.TextFileWriter" disabled="false" id="outFilteredData">
+		<properties writeHeader="false" fileName="pathvar://DATA_TEMP/test.txt" fieldSeparator=";" generateMetadata="true" stringQualifierEscape="&quot;" writeAllColumns="true" compression="NONE" encoding="UTF-8" lineSeparator="\r\n" stringQualifier="&quot;" useStringQualifierOnAllColumns="false">
+			<columns/>
+			<dataFormatParameters falseValue="false" dateTimeFormat="yyyy-MM-dd HH:mm:ss" decimalSeparator="." dayFormat="yyyy-MM-dd" trueValue="true" dateFormatLocale="en_US" thousandsSeparator=""/>
+		</properties>
+		<visual-constraints layout="vertical" bounds="480,240,-1,-1"/>
+	</step>
+
+
+
+<!-- (outFullData) --><step mode="NORMAL" className="com.ataccama.dqc.tasks.io.text.write.TextFileWriter" disabled="false" id="outFullData">
+		<properties writeHeader="false" fieldSeparator=";" generateMetadata="true" stringQualifierEscape="&quot;" writeAllColumns="true" compression="NONE" encoding="UTF-8" lineSeparator="\r\n" stringQualifier="&quot;" useStringQualifierOnAllColumns="false">
+			<columns/>
+			<dataFormatParameters falseValue="false" dateTimeFormat="yyyy-MM-dd HH:mm:ss" decimalSeparator="." dayFormat="yyyy-MM-dd" trueValue="true" dateFormatLocale="en_US" thousandsSeparator=""/>
+		</properties>
+		<visual-constraints layout="vertical" bounds="264,360,-1,-1"/>
+	</step>
+
+
+
+<!-- (outTempData) --><step mode="NORMAL" className="com.ataccama.dqc.tasks.io.text.write.TextFileWriter" disabled="false" id="outTempData">
+		<properties writeHeader="false" fileName="pathvar://DATA_TEMP/workflow_tutorial_temporary_file.txt" fieldSeparator=";" generateMetadata="true" stringQualifierEscape="&quot;" writeAllColumns="true" compression="NONE" encoding="UTF-8" lineSeparator="\r\n" stringQualifier="&quot;" useStringQualifierOnAllColumns="false">
+			<columns/>
+			<dataFormatParameters falseValue="false" dateTimeFormat="yyyy-MM-dd HH:mm:ss" decimalSeparator="." dayFormat="yyyy-MM-dd" trueValue="true" dateFormatLocale="en_US" thousandsSeparator=""/>
+		</properties>
+		<visual-constraints layout="vertical" bounds="384,312,-1,-1"/>
+	</step>
+
+
+
+<modelComment backgroundColor="255,255,180" borderColor="183,183,0" bounds="480,48,134,25" foregroundColor="51,51,51">Reads columns from DB, creates shadow column (file_name_expression)</modelComment>
+
+
+
+<modelComment backgroundColor="255,255,180" borderColor="183,183,0" bounds="480,120,368,35" foregroundColor="51,51,51">Uses parameter to populate the &#39;file_name_expression&#39; column.</modelComment>
+
+</purity-config>

@@ -1,0 +1,98 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<purity-config version="15.4.0.241010-368-484083b9">
+	<references/>
+	<component-mappings>
+		<propertyMappings/>
+	</component-mappings>
+
+<!-- (Card) --><step id="Card" className="com.ataccama.dqc.tasks.clean.ValidateIdCardAlgorithm" disabled="false" mode="NORMAL">
+		<properties omitInvalidIC="true" cn="src_card" cnOut="std_card">
+			<scorer explanationColumn="exp_card" scoreColumn="sco_card">
+				<scoringEntries>
+					<scoringEntry score="10000" explainAs="VIC_NULL" explain="true" key="VIC_NULL"/>
+					<scoringEntry score="10000" explainAs="VIC_BAD_FORMAT" explain="true" key="VIC_BAD_FORMAT"/>
+					<scoringEntry score="10000" explainAs="VIC_INVALID" explain="true" key="VIC_INVALID"/>
+					<scoringEntry score="10000" explainAs="VIC_INVALID_CHECK" explain="true" key="VIC_INVALID_CHECK"/>
+					<scoringEntry score="10000" explainAs="VIC_EMPTY_ISSUER" explain="true" key="VIC_EMPTY_ISSUER"/>
+				</scoringEntries>
+			</scorer>
+		</properties>
+		<visual-constraints bounds="48,168,-1,-1" layout="vertical"/>
+	</step>
+	<connection className="com.ataccama.dqc.model.elements.connections.StandardFlowConnection" disabled="false">
+		<source step="Card" endpoint="out"/>
+		<target step="Cleansed card" endpoint="in"/>
+		<visual-constraints>
+			<bendpoints/>
+		</visual-constraints>
+	</connection>
+
+
+
+<!-- (Cleansed card) --><step id="Cleansed card" className="com.ataccama.dqc.tasks.io.text.write.TextFileWriter" disabled="false" mode="NORMAL">
+		<properties useStringQualifierOnAllColumns="false" stringQualifier="&quot;" lineSeparator="\r\n" fieldSeparator=";" generateMetadata="true" fileName="../../data/out/08.02 Card_cleansed.csv" encoding="UTF-8" writeHeader="true" writeAllColumns="false" compression="NONE" stringQualifierEscape="&quot;">
+			<columns>
+				<textWriterColumn name="src_card"/>
+				<textWriterColumn name="std_card"/>
+				<textWriterColumn name="sco_card"/>
+				<textWriterColumn name="exp_card"/>
+			</columns>
+			<dataFormatParameters trueValue="true" falseValue="false" thousandsSeparator="" dateFormatLocale="en_US" dateTimeFormat="yyyy-MM-dd HH:mm:ss" decimalSeparator="." dayFormat="yyyy-MM-dd"/>
+		</properties>
+		<visual-constraints bounds="48,240,-1,-1" layout="vertical"/>
+	</step>
+
+
+
+<!-- (party) --><step id="party" className="com.ataccama.dqc.tasks.io.text.read.TextFileReader" disabled="false" mode="NORMAL">
+		<properties stringQualifier="&quot;" lineSeparator="\r\n" fieldSeparator=";" lineMaxReadLength="65536" numberOfLinesInHeader="1" fileName="../../data/in/party_full.csv" encoding="UTF-8" numberOfLinesInFooter="0" compression="NONE" stringQualifierEscape="&quot;">
+			<columns>
+				<textReaderColumn name="src_name" type="STRING" ignore="true"/>
+				<textReaderColumn name="src_gender" type="STRING" ignore="true"/>
+				<textReaderColumn name="src_birth_date" type="STRING" ignore="true"/>
+				<textReaderColumn name="src_sin" type="STRING" ignore="true"/>
+				<textReaderColumn name="src_card" type="STRING" ignore="false"/>
+				<textReaderColumn name="src_address" type="STRING" ignore="true"/>
+				<textReaderColumn name="src_email" type="STRING" ignore="true"/>
+				<textReaderColumn name="src_primary_key" type="STRING" ignore="true"/>
+				<textReaderColumn name="meta_last_update" type="STRING" ignore="true"/>
+			</columns>
+			<dataFormatParameters trueValue="true" falseValue="false" thousandsSeparator="" dateFormatLocale="en_US" dateTimeFormat="yy-MM-dd HH:mm:ss" decimalSeparator="." dayFormat="yy-MM-dd"/>
+			<errorHandlingStrategy rejectFileName="rejected.txt">
+				<errorInstructions>
+					<errorInstruction putToLog="true" errorType="EXTRA_DATA" dataStrategy="READ_POSSIBLE" putToReject="false"/>
+					<errorInstruction putToLog="true" errorType="LONG_LINE" dataStrategy="STOP" putToReject="true"/>
+					<errorInstruction putToLog="true" errorType="PROCESSING_ERROR" dataStrategy="STOP" putToReject="false"/>
+					<errorInstruction putToLog="true" errorType="INVALID_DATE" dataStrategy="READ_POSSIBLE" putToReject="false"/>
+					<errorInstruction putToLog="true" errorType="SHORT_LINE" dataStrategy="READ_POSSIBLE" putToReject="true"/>
+					<errorInstruction putToLog="true" errorType="UNPARSABLE_FIELD" dataStrategy="NULL_VALUE" putToReject="false"/>
+				</errorInstructions>
+			</errorHandlingStrategy>
+			<shadowColumns>
+				<shadowColumnDef name="std_card" type="STRING"/>
+				<shadowColumnDef name="sco_card" type="INTEGER"/>
+				<shadowColumnDef name="exp_card" type="STRING"/>
+			</shadowColumns>
+		</properties>
+		<visual-constraints bounds="48,96,-1,-1" layout="vertical"/>
+	</step>
+	<connection className="com.ataccama.dqc.model.elements.connections.StandardFlowConnection" disabled="false">
+		<source step="party" endpoint="out"/>
+		<target step="Card" endpoint="in"/>
+		<visual-constraints>
+			<bendpoints/>
+		</visual-constraints>
+	</connection>
+
+
+
+<modelComment bounds="24,24,409,70" borderColor="255,255,255" backgroundColor="128,255,128" foregroundColor="40,0,0">Plan Goals
+The goal of this plan is to perform cleansing validation of credit card 
+and bank account numbers by using the Validate ID Card step.</modelComment>
+
+
+
+<modelComment bounds="216,168,289,54" borderColor="255,255,255" backgroundColor="219,219,219" foregroundColor="64,0,64">The validation of credit card and bank account
+numbers is done through the Luhn algorithm.</modelComment>
+
+</purity-config>

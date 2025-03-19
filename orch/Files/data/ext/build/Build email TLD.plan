@@ -1,0 +1,71 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<purity-config xmlns:comm="http://www.ataccama.com/purity/comment" version="15.4.0.241010-368-484083b9">
+	<references/>
+	<component-mappings>
+		<propertyMappings/>
+	</component-mappings>
+
+<!-- (Filter not punycoded TLDs) --><step id="Filter not punycoded TLDs" className="com.ataccama.dqc.tasks.conditions.Filter" disabled="false" mode="NORMAL">
+		<properties condition="indexOf(tld, &quot;XN&quot;, 0) is null">
+			<comm:comment>Filter not punycoded TLDs</comm:comment>
+		</properties>
+		<visual-constraints bounds="48,168,-1,-1" layout="vertical"/>
+	</step>
+	<connection className="com.ataccama.dqc.model.elements.connections.StandardFlowConnection" disabled="false">
+		<source step="Filter not punycoded TLDs" endpoint="out"/>
+		<target step="email_tld.lkp" endpoint="in"/>
+		<visual-constraints>
+			<bendpoints/>
+		</visual-constraints>
+	</connection>
+
+
+
+<!-- (email_tld.lkp) --><step id="email_tld.lkp" className="com.ataccama.dqc.tasks.builders.LookupBuilder" disabled="false" mode="NORMAL">
+		<properties approximativeIndex="false" compressed="false" duplicities="OMIT" bestDistanceIndex="false" fileName="pathvar://EXT_NEW/lkp/email_tld.lkp" bidirectApproximativeIndex="false" key="tld">
+			<additionalColumns/>
+			<matchingValue doRemoveRepeatedChars="false" doSqueezeWS="false" supportedCharacters="[:letter:][:digit:]" doRemoveDia="false" doUpperCase="true"/>
+			<userMetadata>
+				<items/>
+			</userMetadata>
+			<comm:comment>TLD Lookup Builder</comm:comment>
+		</properties>
+		<visual-constraints bounds="48,240,-1,-1" layout="vertical"/>
+	</step>
+
+
+
+<!-- (email_tlds) --><step id="email_tlds" className="com.ataccama.dqc.tasks.io.text.read.TextFileReader" disabled="false" mode="NORMAL">
+		<properties stringQualifier="&quot;" lineSeparator="\r\n" fieldSeparator=";" lineMaxReadLength="65536" numberOfLinesInHeader="1" fileName="pathvar://EXT_NEW/src/email_tlds.csv" encoding="UTF-8" numberOfLinesInFooter="0" compression="NONE" stringQualifierEscape="&quot;">
+			<columns>
+				<textReaderColumn name="tld" type="STRING" ignore="false"/>
+			</columns>
+			<dataFormatParameters trueValue="true" falseValue="false" thousandsSeparator="" dateFormatLocale="en_US" dateTimeFormat="yy-MM-dd HH:mm:ss" decimalSeparator="." dayFormat="yy-MM-dd"/>
+			<errorHandlingStrategy rejectFileName="rejected.txt">
+				<errorInstructions>
+					<errorInstruction putToLog="true" errorType="EXTRA_DATA" dataStrategy="READ_POSSIBLE" putToReject="false"/>
+					<errorInstruction putToLog="true" errorType="LONG_LINE" dataStrategy="STOP" putToReject="true"/>
+					<errorInstruction putToLog="true" errorType="PROCESSING_ERROR" dataStrategy="STOP" putToReject="false"/>
+					<errorInstruction putToLog="true" errorType="INVALID_DATE" dataStrategy="READ_POSSIBLE" putToReject="false"/>
+					<errorInstruction putToLog="true" errorType="SHORT_LINE" dataStrategy="READ_POSSIBLE" putToReject="true"/>
+					<errorInstruction putToLog="true" errorType="UNPARSABLE_FIELD" dataStrategy="NULL_VALUE" putToReject="false"/>
+				</errorInstructions>
+			</errorHandlingStrategy>
+			<shadowColumns/>
+		</properties>
+		<visual-constraints bounds="48,96,-1,-1" layout="vertical"/>
+	</step>
+	<connection className="com.ataccama.dqc.model.elements.connections.StandardFlowConnection" disabled="false">
+		<source step="email_tlds" endpoint="out"/>
+		<target step="Filter not punycoded TLDs" endpoint="in"/>
+		<visual-constraints>
+			<bendpoints/>
+		</visual-constraints>
+	</connection>
+
+
+
+<modelComment bounds="24,24,409,49" borderColor="255,255,255" backgroundColor="128,255,128" foregroundColor="40,0,0">Plan Goals
+The goal of this plan is to generate an LKP file with valid top level email domains.</modelComment>
+
+</purity-config>
